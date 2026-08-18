@@ -19,6 +19,54 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Build static site
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og
+          cp index.html styles.css app.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
+          cp assets/brand/pattern.svg dist/assets/brand/pattern.svg
+
+          # Decode the exact user-supplied / approved visual assets used by the site.
+          base64 -d asset-b64/logo.webp.b64 > dist/assets/brand/sanaam-logo-original.webp
+          base64 -d asset-b64/favicon.png.b64 > dist/assets/brand/favicon.png
+          base64 -d asset-b64/lineup.webp.b64 > dist/assets/products/lineup.webp
+          base64 -d asset-b64/base-oil.webp.b64 > dist/assets/industry/base-oil.webp
+          base64 -d asset-b64/manufacturing.webp.b64 > dist/assets/industry/manufacturing.webp
+
+          # Preserve the supplied Open Graph preview when present.
+          if [ -f assets/og/sanaam-og.jpg ]; then
+            cp assets/og/sanaam-og.jpg dist/assets/og/sanaam-og.jpg
+          elif [ -f asset-b64/sanaam-og.jpg.b64 ]; then
+            base64 -d asset-b64/sanaam-og.jpg.b64 > dist/assets/og/sanaam-og.jpg
+          fi
+
+          # Use the approved original SANAAM logo everywhere; never redraw or recolor it.
+          sed -i 's#assets/brand/sanaam-logo.svg#assets/brand/sanaam-logo-original.webp#g' dist/index.html
+          sed -i 's#assets/brand/sanaam-mono.svg#assets/brand/sanaam-logo-original.webp#g' dist/index.html
+          sed -i 's#assets/brand/sanaam-icon.svg#assets/brand/favicon.png#g' dist/index.html
+          sed -i 's#assets/products/pack-4l.webp#assets/products/lineup.webp#g' dist/products.js
+          sed -i 's#assets/products/pack-200l.webp#assets/products/lineup.webp#g' dist/products.js
+
+          # Point tab / share metadata at supplied PNG/JPG files.
+          sed -i 's#assets/brand/sanaam-icon.png#assets/brand/favicon.png#g' dist/index.html
+          sed -i 's#assets/brand/favicon.svg#assets/brand/favicon.png#g' dist/index.html
+          sed -i 's#assets/og/sanaam-og.svg#assets/og/sanaam-og.jpg#g' dist/index.html
+
+          # Guard against reintroducing prototype/disclaimer language.
+          if grep -Eiq 'Concept Product Catalogue|preliminary product|not a factory|ليست مصنعا|كتالوج منتج تجريبي|تجريبي' dist/index.html dist/translations.js; then
+            echo 'Prototype/disclaimer wording found; refusing deployment.' >&2
+            exit 1
+          fi
+
+          # Validate decoded image types so broken base64 cannot deploy.
+          test "$(file -b --mime-type dist/assets/brand/sanaam-logo-original.webp)" = "image/webp"
+          test "$(file -b --mime-type dist/assets/brand/favicon.png)" = "image/png"
+          test "$(file -b --mime-type dist/assets/products/lineup.webp)" = "image/webp"
+          test "$(file -b --mime-type dist/assets/industry/base-oil.webp)" = "image/webp"
+          test "$(file -b --mime-type dist/assets/industry/manufacturing.webp)" = "image/webp"
+          test -s dist/assets/og/sanaam-og.jpg
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
@@ -26,7 +74,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: '.'
+          path: dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
