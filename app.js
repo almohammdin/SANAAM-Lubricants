@@ -1,69 +1,38 @@
 (()=>{
   'use strict';
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-  const PRODUCTS=window.SANAAM_PRODUCTS||[], FAMILIES=window.SANAAM_FAMILIES||[], I18N=window.SANAAM_I18N||{};
-  const state={lang:localStorage.getItem('sanaam.lang')||'so', inquiry:JSON.parse(localStorage.getItem('sanaam.inquiry')||'[]'), fields:JSON.parse(localStorage.getItem('sanaam.fields')||'{}')};
+  const PRODUCTS=window.SANAAM_PRODUCTS||[], FAMILIES=window.SANAAM_FAMILIES||[], I18N=window.SANAAM_I18N||{}, CONFIG=window.SANAAM_CONFIG||{};
+  const state={lang:localStorage.getItem('sanaam.lang')||'so',inquiry:JSON.parse(localStorage.getItem('sanaam.inquiry')||'[]'),fields:JSON.parse(localStorage.getItem('sanaam.fields')||'{}')};
   if(!I18N[state.lang]) state.lang='so';
   function t(path){return path.split('.').reduce((o,k)=>o?.[k],I18N[state.lang])??path}
-  function setText(){
-    const lang=I18N[state.lang]; document.documentElement.lang=state.lang; document.documentElement.dir=lang.dir;
-    $$('[data-i18n]').forEach(el=>{const val=t(el.dataset.i18n); if(typeof val==='string') el.textContent=val});
-    $$('[data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===state.lang));
-    renderDynamic(); renderInquiry();
-  }
-  function familyTitle(id){return FAMILIES.find(f=>f.id===id)?.title||id}
-  function productCard(p){
-    return `<article class="product-card"><div class="product-top"><div class="grade">${p.grade}</div><span class="family-chip">${familyTitle(p.family)}</span></div><h3>${p.name}</h3><p class="product-type">${p.type}</p><div class="specs"><div class="spec"><span>Spec</span><strong>${p.api}</strong></div><div class="spec"><span>${t('card.application')}</span><strong>${p.application}</strong></div><div class="spec"><span>${t('card.base')}</span><strong>${p.base}</strong></div><div class="spec"><span>${t('card.origin')}</span><strong>${p.origin}</strong></div></div><div class="pack-chips">${p.packaging.map(x=>`<span>${x}</span>`).join('')}</div><button class="btn btn-dark add-product" type="button" data-id="${p.id}">${t('card.add')}</button></article>`
-  }
+  function familyTitle(id){const f=FAMILIES.find(x=>x.id===id);return f?t(f.titleKey):id}
+  function applicationLabel(code){return t(`appLabels.${code}`)}
+  function escapeHtml(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c))}
+  function productCard(p){return `<article class="product-card"><div class="product-photo"><img src="${p.image}" alt="${escapeHtml(p.name)}" loading="lazy"></div><div class="product-content"><div class="product-top"><div class="grade">${p.grade}</div><span class="family-chip">${familyTitle(p.family)}</span></div><h3>${p.name}</h3><p class="product-type">${p.type}</p><div class="specs"><div class="spec"><span>Spec</span><strong>${p.api}</strong></div><div class="spec"><span>${t('card.application')}</span><strong>${applicationLabel(p.application)}</strong></div><div class="spec"><span>${t('card.base')}</span><strong>${p.base}</strong></div><div class="spec"><span>${t('card.origin')}</span><strong>${p.origin}</strong></div></div><div class="pack-chips">${p.packaging.map(x=>`<span>${x}</span>`).join('')}</div><button class="btn btn-dark add-product" type="button" data-id="${p.id}">${t('card.add')}</button></div></article>`}
   function renderDynamic(){
-    $('#originChips').innerHTML=t('origin.chips').map((x,i)=>`<div class="origin-card"><i>${['◈','⌁','↗'][i]}</i><span>${x}</span></div>`).join('');
     $('#featuredProducts').innerHTML=PRODUCTS.filter(p=>p.featured).slice(0,12).map(productCard).join('');
-    $('#familyGrid').innerHTML=FAMILIES.map(f=>{const items=PRODUCTS.filter(p=>p.family===f.id);return `<div class="family-card"><strong>${f.title}</strong><p>${items.map(x=>x.grade).join(' · ')}</p></div>`}).join('');
+    $('#familyGrid').innerHTML=FAMILIES.map(f=>{const items=PRODUCTS.filter(p=>p.family===f.id);return `<div class="family-card"><strong>${familyTitle(f.id)}</strong><p>${items.map(x=>x.grade).join(' · ')}</p></div>`}).join('');
+    $('#applicationsGrid').innerHTML=t('applications.cards').map(card=>`<article class="application-card"><span class="app-code">${card.code}</span><h3>${card.title}</h3><p>${card.text}</p><ul>${card.items.map(x=>`<li>${x}</li>`).join('')}</ul></article>`).join('');
+    $('#processList').innerHTML=t('manufacturing.process').map((x,i)=>`<div class="process-step"><i>${i+1}</i><span>${x}</span></div>`).join('');
     $('#supplyChain').innerHTML=t('chain.steps').map((s,i)=>`<div class="chain-step"><i>${i+1}</i><strong>${s[0]}</strong><span>${s[1]}</span></div>`).join('');
     $('#distributorPoints').innerHTML=t('distributors.points').map(x=>`<div class="dist-point">${x}</div>`).join('');
-    $('#fullRange').innerHTML=FAMILIES.map(f=>`<div class="family-block"><h3>${f.title}</h3><div class="range-chips">${PRODUCTS.filter(p=>p.family===f.id).map(p=>`<button type="button" class="range-add" data-id="${p.id}">${p.grade} +</button>`).join('')}</div></div>`).join('');
-    bindAdds();
+    $('#fullRange').innerHTML=FAMILIES.map(f=>`<div class="family-block"><h3>${familyTitle(f.id)}</h3><div class="range-chips">${PRODUCTS.filter(p=>p.family===f.id).map(p=>`<button type="button" class="range-add" data-id="${p.id}">${p.grade} +</button>`).join('')}</div></div>`).join('');bindAdds();
   }
-  function bindAdds(){
-    $$('.add-product,.range-add').forEach(b=>b.onclick=()=>addProduct(b.dataset.id));
-  }
-  function addProduct(id){
-    const p=PRODUCTS.find(x=>x.id===id); if(!p)return;
-    if(!state.inquiry.some(x=>x.id===id)) state.inquiry.push({id,packaging:p.packaging[0],quantity:''});
-    saveInquiry(); renderInquiry(); toast(t('inquiry.added')); openDrawer();
-  }
-  function saveInquiry(){localStorage.setItem('sanaam.inquiry',JSON.stringify(state.inquiry)); $('#inquiryCount').textContent=state.inquiry.length}
-  function fieldValue(id){return $('#'+id)?.value||''}
+  function setText(){const lang=I18N[state.lang];document.documentElement.lang=state.lang;document.documentElement.dir=lang.dir;$$('[data-i18n]').forEach(el=>{const val=t(el.dataset.i18n);if(typeof val==='string')el.textContent=val});$$('[data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===state.lang));renderDynamic();renderInquiry()}
+  function bindAdds(){$$('.add-product,.range-add').forEach(b=>b.onclick=()=>addProduct(b.dataset.id))}
+  function addProduct(id){const p=PRODUCTS.find(x=>x.id===id);if(!p)return;if(!state.inquiry.some(x=>x.id===id))state.inquiry.push({id,packaging:p.packaging[0],quantity:''});saveInquiry();renderInquiry();toast(t('inquiry.added'));openDrawer()}
+  function saveInquiry(){localStorage.setItem('sanaam.inquiry',JSON.stringify(state.inquiry));$('#inquiryCount').textContent=state.inquiry.length}
+  function fieldValue(id){return $('#'+id)?.value.trim()||''}
   function updateFields(){state.fields={market:fieldValue('inqMarket'),company:fieldValue('inqCompany'),contact:fieldValue('inqContact'),phone:fieldValue('inqPhone'),notes:fieldValue('inqNotes')};localStorage.setItem('sanaam.fields',JSON.stringify(state.fields));updatePreview()}
-  function inquiryText(){
-    const f=state.fields, lang=state.lang;
-    const labels=lang==='ar'?{market:'السوق',company:'الشركة',contact:'التواصل',products:'المنتجات',pack:'العبوة',qty:'الكمية التقريبية',notes:'ملاحظات'}:lang==='so'?{market:'Suuq',company:'Shirkad',contact:'Xiriir',products:'Alaabta',pack:'Baakad',qty:'Qiyaasta Tirada',notes:'Faahfaahin'}:{market:'Market',company:'Company',contact:'Contact',products:'Products',pack:'Packaging',qty:'Estimated Quantity',notes:'Notes'};
-    const lines=['SANAAM Product Inquiry','',`${labels.market}: ${f.market||''}`,`${labels.company}: ${f.company||''}`,`${labels.contact}: ${[f.contact,f.phone].filter(Boolean).join(' · ')}`,'',`${labels.products}:`,''];
-    state.inquiry.forEach((it,i)=>{const p=PRODUCTS.find(x=>x.id===it.id); if(p){lines.push(`${i+1}. ${p.name}`,`${labels.pack}: ${it.packaging||''}`,`${labels.qty}: ${it.quantity||''}`,'')}});
-    lines.push(`${labels.notes}: ${f.notes||''}`); return lines.join('\n');
-  }
+  function inquiryText(){const f=state.fields,lang=state.lang;const labels=lang==='ar'?{market:'السوق',company:'الشركة',contact:'التواصل',products:'المنتجات',pack:'العبوة',qty:'الكمية التقريبية',notes:'ملاحظات'}:lang==='so'?{market:'Suuq',company:'Shirkad',contact:'Xiriir',products:'Alaabta',pack:'Baakad',qty:'Qiyaasta Tirada',notes:'Faahfaahin'}:{market:'Market',company:'Company',contact:'Contact',products:'Products',pack:'Packaging',qty:'Estimated Quantity',notes:'Notes'};const lines=['SANAAM Product Inquiry','',`${labels.market}: ${f.market||''}`,`${labels.company}: ${f.company||''}`,`${labels.contact}: ${[f.contact,f.phone].filter(Boolean).join(' · ')}`,'',`${labels.products}:`,''];state.inquiry.forEach((it,i)=>{const p=PRODUCTS.find(x=>x.id===it.id);if(p)lines.push(`${i+1}. ${p.name}`,`${labels.pack}: ${it.packaging||''}`,`${labels.qty}: ${it.quantity||''}`,'')});lines.push(`${labels.notes}: ${f.notes||''}`);return lines.join('\n')}
   function updatePreview(){if($('#inquiryPreview'))$('#inquiryPreview').textContent=inquiryText()}
-  function renderInquiry(){
-    saveInquiry(); const box=$('#inquiryItems');
-    if(!state.inquiry.length) box.innerHTML=`<div class="empty-state">${t('inquiry.empty')}</div>`;
-    else box.innerHTML=state.inquiry.map(it=>{const p=PRODUCTS.find(x=>x.id===it.id);return `<div class="inq-item"><div class="inq-item-head"><div><strong>${p.name}</strong><small>${p.type}</small></div><button class="remove-btn" type="button" data-remove="${it.id}">${t('inquiry.remove')}</button></div><div class="inq-controls"><label><span>${t('inquiry.packaging')}</span><select data-pack="${it.id}">${p.packaging.map(v=>`<option ${v===it.packaging?'selected':''}>${v}</option>`).join('')}</select></label><label><span>${t('inquiry.quantity')}</span><input data-qty="${it.id}" value="${escapeHtml(it.quantity||'')}" inputmode="decimal"></label></div></div>`}).join('');
-    $$('[data-remove]').forEach(b=>b.onclick=()=>{state.inquiry=state.inquiry.filter(x=>x.id!==b.dataset.remove);saveInquiry();renderInquiry()});
-    $$('[data-pack]').forEach(s=>s.onchange=()=>{const it=state.inquiry.find(x=>x.id===s.dataset.pack);if(it)it.packaging=s.value;saveInquiry();updatePreview()});
-    $$('[data-qty]').forEach(i=>i.oninput=()=>{const it=state.inquiry.find(x=>x.id===i.dataset.qty);if(it)it.quantity=i.value;saveInquiry();updatePreview()});
-    Object.entries({inqMarket:'market',inqCompany:'company',inqContact:'contact',inqPhone:'phone',inqNotes:'notes'}).forEach(([id,k])=>{const el=$('#'+id); if(el){el.value=state.fields[k]||'';el.oninput=updateFields}}); updatePreview();
-  }
-  function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+  function renderInquiry(){saveInquiry();const box=$('#inquiryItems');if(!state.inquiry.length)box.innerHTML=`<div class="empty-state">${t('inquiry.empty')}</div>`;else box.innerHTML=state.inquiry.map(it=>{const p=PRODUCTS.find(x=>x.id===it.id);if(!p)return'';return `<div class="inq-item"><div class="inq-item-head"><div><strong>${p.name}</strong><small>${p.type}</small></div><button class="remove-btn" type="button" data-remove="${it.id}">${t('inquiry.remove')}</button></div><div class="inq-controls"><label><span>${t('inquiry.packaging')}</span><select data-pack="${it.id}">${p.packaging.map(v=>`<option ${v===it.packaging?'selected':''}>${v}</option>`).join('')}</select></label><label><span>${t('inquiry.quantity')}</span><input data-qty="${it.id}" value="${escapeHtml(it.quantity||'')}" inputmode="decimal"></label></div></div>`}).join('');$$('[data-remove]').forEach(b=>b.onclick=()=>{state.inquiry=state.inquiry.filter(x=>x.id!==b.dataset.remove);saveInquiry();renderInquiry()});$$('[data-pack]').forEach(s=>s.onchange=()=>{const it=state.inquiry.find(x=>x.id===s.dataset.pack);if(it)it.packaging=s.value;saveInquiry();updatePreview()});$$('[data-qty]').forEach(i=>i.oninput=()=>{const it=state.inquiry.find(x=>x.id===i.dataset.qty);if(it)it.quantity=i.value;saveInquiry();updatePreview()});Object.entries({inqMarket:'market',inqCompany:'company',inqContact:'contact',inqPhone:'phone',inqNotes:'notes'}).forEach(([id,k])=>{const el=$('#'+id);if(el){el.value=state.fields[k]||'';el.oninput=updateFields}});updatePreview()}
   function openDrawer(){const d=$('#inquiryDrawer'),b=$('#drawerBackdrop');d.classList.add('open');d.setAttribute('aria-hidden','false');b.hidden=false;setTimeout(()=>$('#closeInquiry').focus(),20)}
   function closeDrawer(){const d=$('#inquiryDrawer'),b=$('#drawerBackdrop');d.classList.remove('open');d.setAttribute('aria-hidden','true');b.hidden=true}
   function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),1800)}
   async function copyText(){const txt=inquiryText();try{await navigator.clipboard.writeText(txt);toast(t('inquiry.copy'))}catch{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast(t('inquiry.copy'))}}
   async function shareText(){const txt=inquiryText();if(navigator.share){try{await navigator.share({title:'SANAAM Product Inquiry',text:txt})}catch(e){if(e.name!=='AbortError')copyText()}}else copyText()}
-  $$('[data-lang]').forEach(b=>b.onclick=()=>{state.lang=b.dataset.lang;localStorage.setItem('sanaam.lang',state.lang);setText()});
-  $('#toggleRange').onclick=()=>{const r=$('#fullRange');r.hidden=!r.hidden};
-  ['openInquiryTop','heroInquiry','distributorInquiry','openInquiryBottom'].forEach(id=>$('#'+id).onclick=openDrawer);
-  $('#closeInquiry').onclick=closeDrawer; $('#drawerBackdrop').onclick=closeDrawer; $('#copyInquiry').onclick=copyText; $('#shareInquiry').onclick=shareText;
-  $('#menuToggle').onclick=()=>{const n=$('#mobileNav'),m=$('#menuToggle');n.classList.toggle('open');m.setAttribute('aria-expanded',n.classList.contains('open'))};
-  $$('#mobileNav a').forEach(a=>a.onclick=()=>$('#mobileNav').classList.remove('open'));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
-  setText();
+  function validateInquiry(){updateFields();const f=state.fields;if(!f.market||!f.company||!f.contact||!f.phone){$('#sendStatus').textContent=t('inquiry.required');return false}if(!state.inquiry.length){$('#sendStatus').textContent=t('inquiry.empty');return false}return true}
+  async function sendInquiry(){if(!validateInquiry())return;const btn=$('#sendInquiry'),status=$('#sendStatus'),f=state.fields;btn.disabled=true;status.textContent=t('inquiry.sending');const fd=new FormData();fd.append('_subject',`SANAAM Product Inquiry | ${f.market} | ${f.company}`);fd.append('_template','table');fd.append('_captcha','false');fd.append('Market / Country',f.market);fd.append('Company Name',f.company);fd.append('Contact Person',f.contact);fd.append('WhatsApp / Phone',f.phone);fd.append('Products',inquiryText());fd.append('Notes',f.notes||'');try{const res=await fetch(CONFIG.formSubmitEndpoint,{method:'POST',headers:{Accept:'application/json'},body:fd});if(!res.ok)throw new Error('submit_failed');status.textContent=t('inquiry.sent');toast(t('inquiry.sent'))}catch(e){status.textContent=t('inquiry.sendError')}finally{btn.disabled=false}}
+  $$('[data-lang]').forEach(b=>b.onclick=()=>{state.lang=b.dataset.lang;localStorage.setItem('sanaam.lang',state.lang);setText()});$('#toggleRange').onclick=()=>{const r=$('#fullRange');r.hidden=!r.hidden};['openInquiryTop','heroInquiry','distributorInquiry','openInquiryBottom','footerInquiry'].forEach(id=>{const el=$('#'+id);if(el)el.onclick=openDrawer});$('#closeInquiry').onclick=closeDrawer;$('#drawerBackdrop').onclick=closeDrawer;$('#copyInquiry').onclick=copyText;$('#shareInquiry').onclick=shareText;$('#sendInquiry').onclick=sendInquiry;$('#menuToggle').onclick=()=>{const n=$('#mobileNav'),m=$('#menuToggle');n.classList.toggle('open');m.setAttribute('aria-expanded',n.classList.contains('open'))};$$('#mobileNav a').forEach(a=>a.onclick=()=>$('#mobileNav').classList.remove('open'));document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});setText();
 })();
