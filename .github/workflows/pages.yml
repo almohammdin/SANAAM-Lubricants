@@ -27,6 +27,7 @@ jobs:
           mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og
           cp index.html styles.css app.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
           cp assets/brand/pattern.svg dist/assets/brand/pattern.svg
+          cp assets/brand/favicon.svg dist/assets/brand/favicon.svg
 
           # Decode the exact user-supplied / approved visual assets used by the site.
           base64 -d asset-b64/logo.webp.b64 > dist/assets/brand/sanaam-logo-original.webp
@@ -34,13 +35,7 @@ jobs:
           base64 -d asset-b64/lineup.webp.b64 > dist/assets/products/lineup.webp
           base64 -d asset-b64/base-oil.webp.b64 > dist/assets/industry/base-oil.webp
           base64 -d asset-b64/manufacturing.webp.b64 > dist/assets/industry/manufacturing.webp
-
-          # Preserve the supplied Open Graph preview when present.
-          if [ -f assets/og/sanaam-og.jpg ]; then
-            cp assets/og/sanaam-og.jpg dist/assets/og/sanaam-og.jpg
-          elif [ -f asset-b64/sanaam-og.jpg.b64 ]; then
-            base64 -d asset-b64/sanaam-og.jpg.b64 > dist/assets/og/sanaam-og.jpg
-          fi
+          base64 -d asset-b64/sanaam-og.jpg.b64 > dist/assets/og/sanaam-og.jpg
 
           # Use the approved original SANAAM logo everywhere; never redraw or recolor it.
           sed -i 's#assets/brand/sanaam-logo.svg#assets/brand/sanaam-logo-original.webp#g' dist/index.html
@@ -53,6 +48,7 @@ jobs:
           sed -i 's#assets/brand/sanaam-icon.png#assets/brand/favicon.png#g' dist/index.html
           sed -i 's#assets/brand/favicon.svg#assets/brand/favicon.png#g' dist/index.html
           sed -i 's#assets/og/sanaam-og.svg#assets/og/sanaam-og.jpg#g' dist/index.html
+          sed -i '/assets-loader.js/d' dist/index.html
 
           # Guard against reintroducing prototype/disclaimer language.
           if grep -Eiq 'Concept Product Catalogue|preliminary product|not a factory|ليست مصنعا|كتالوج منتج تجريبي|تجريبي' dist/index.html dist/translations.js; then
@@ -66,7 +62,7 @@ jobs:
           test "$(file -b --mime-type dist/assets/products/lineup.webp)" = "image/webp"
           test "$(file -b --mime-type dist/assets/industry/base-oil.webp)" = "image/webp"
           test "$(file -b --mime-type dist/assets/industry/manufacturing.webp)" = "image/webp"
-          test -s dist/assets/og/sanaam-og.jpg
+          test "$(file -b --mime-type dist/assets/og/sanaam-og.jpg)" = "image/jpeg"
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
