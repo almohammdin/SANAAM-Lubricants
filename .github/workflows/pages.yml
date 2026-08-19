@@ -24,10 +24,13 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist
-          mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og
+          mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og dist/asset-b64
           cp index.html styles.css app.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
           cp assets/brand/pattern.svg dist/assets/brand/pattern.svg
           cp assets/brand/favicon.svg dist/assets/brand/favicon.svg
+
+          # Keep fallback Base64 sources in the deployed site as well.
+          cp asset-b64/*.b64 dist/asset-b64/
 
           # Decode the exact user-supplied / approved visual assets used by the site.
           base64 -d asset-b64/logo.webp.b64 > dist/assets/brand/sanaam-logo-original.webp
@@ -48,7 +51,6 @@ jobs:
           sed -i 's#assets/brand/sanaam-icon.png#assets/brand/favicon.png#g' dist/index.html
           sed -i 's#assets/brand/favicon.svg#assets/brand/favicon.png#g' dist/index.html
           sed -i 's#assets/og/sanaam-og.svg#assets/og/sanaam-og.jpg#g' dist/index.html
-          sed -i '/assets-loader.js/d' dist/index.html
 
           # Guard against reintroducing prototype/disclaimer language.
           if grep -Eiq 'Concept Product Catalogue|preliminary product|not a factory|ليست مصنعا|كتالوج منتج تجريبي|تجريبي' dist/index.html dist/translations.js; then
@@ -56,7 +58,7 @@ jobs:
             exit 1
           fi
 
-          # Validate decoded image types so broken base64 cannot deploy.
+          # Validate decoded image types so broken Base64 cannot deploy.
           test "$(file -b --mime-type dist/assets/brand/sanaam-logo-original.webp)" = "image/webp"
           test "$(file -b --mime-type dist/assets/brand/favicon.png)" = "image/png"
           test "$(file -b --mime-type dist/assets/products/lineup.webp)" = "image/webp"
