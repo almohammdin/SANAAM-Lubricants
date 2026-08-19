@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: sanaam-pages
+  group: pages
   cancel-in-progress: true
 
 jobs:
@@ -29,52 +29,20 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist
-          mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og
-
+          mkdir -p dist
           cp index.html styles.css app.js assets-loader.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
-          cp -R asset-b64 dist/asset-b64
-          cp assets/brand/pattern.svg dist/assets/brand/pattern.svg
-
-          decode() {
-            src="$1"
-            out="$2"
-            test -s "$src"
-            base64 --decode "$src" > "$out"
-            test -s "$out"
-          }
-
-          decode asset-b64/logo.webp.b64 dist/assets/brand/sanaam-logo-original.webp
-          decode asset-b64/favicon.png.b64 dist/assets/brand/favicon.png
-          decode asset-b64/lineup.webp.b64 dist/assets/products/lineup.webp
-          decode asset-b64/pack-1l.webp.b64 dist/assets/products/pack-1l.webp
-          decode asset-b64/pack-4l.webp.b64 dist/assets/products/pack-4l.webp
-          decode asset-b64/pack-5l.webp.b64 dist/assets/products/pack-5l.webp
-          decode asset-b64/pack-20l.webp.b64 dist/assets/products/pack-20l.webp
-          decode asset-b64/pack-200l.webp.b64 dist/assets/products/pack-200l.webp
-          decode asset-b64/base-oil.webp.b64 dist/assets/industry/base-oil.webp
-          decode asset-b64/manufacturing.webp.b64 dist/assets/industry/manufacturing.webp
-
-          if [ -s assets/og/sanaam-og-v8.jpg ]; then
-            cp assets/og/sanaam-og-v8.jpg dist/assets/og/sanaam-og-v8.jpg
-          else
-            decode asset-b64/sanaam-og.jpg.b64 dist/assets/og/sanaam-og-v8.jpg
-          fi
-
-          for f in \
-            dist/assets/brand/sanaam-logo-original.webp \
-            dist/assets/brand/favicon.png \
-            dist/assets/products/lineup.webp \
-            dist/assets/products/pack-1l.webp \
-            dist/assets/products/pack-4l.webp \
-            dist/assets/products/pack-5l.webp \
-            dist/assets/products/pack-20l.webp \
-            dist/assets/products/pack-200l.webp \
-            dist/assets/industry/base-oil.webp \
-            dist/assets/industry/manufacturing.webp \
-            dist/assets/og/sanaam-og-v8.jpg; do
-              test -s "$f"
-          done
-
+          cp -R assets dist/assets
+          test -s dist/assets/brand/sanaam-logo-original.webp
+          test -s dist/assets/brand/favicon.png
+          test -s dist/assets/products/lineup.webp
+          test -s dist/assets/products/pack-1l.webp
+          test -s dist/assets/products/pack-4l.webp
+          test -s dist/assets/products/pack-5l.webp
+          test -s dist/assets/products/pack-20l.webp
+          test -s dist/assets/products/pack-200l.webp
+          test -s dist/assets/industry/base-oil.webp
+          test -s dist/assets/industry/manufacturing.webp
+          test -s dist/assets/og/sanaam-og-v8.jpg
           printf 'SANAAM build: %s\n' "$GITHUB_SHA" > dist/build.txt
 
       - name: Setup Pages
