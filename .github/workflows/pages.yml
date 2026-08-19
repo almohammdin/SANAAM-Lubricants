@@ -11,8 +11,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: sanaam-pages
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -24,12 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build static site
+      - name: Build and validate static site
         shell: bash
         run: |
           set -euo pipefail
           rm -rf dist
           mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og
+
           cp index.html styles.css app.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
           cp assets/brand/pattern.svg dist/assets/brand/pattern.svg
 
@@ -37,7 +38,7 @@ jobs:
             src="$1"
             out="$2"
             test -s "$src"
-            base64 -d "$src" > "$out"
+            base64 --decode "$src" > "$out"
             test -s "$out"
           }
 
@@ -65,12 +66,51 @@ jobs:
           test "$(file -b --mime-type dist/assets/industry/base-oil.webp)" = "image/webp"
           test "$(file -b --mime-type dist/assets/industry/manufacturing.webp)" = "image/webp"
           test "$(file -b --mime-type dist/assets/og/sanaam-og-v6.jpg)" = "image/jpeg"
-          printf '%s\n' "SANAAM build: ${GITHUB_SHA}" > dist/build.txt
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('dist')
+          html = (root / 'index.html').read_text(encoding='utf-8')
+          refs = set(re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html))
+          missing = []
+          for ref in refs:
+              clean = ref.split('?',1)[0].split('#',1)[0]
+              if not clean or clean.startswith(('#','http://','https://','mailto:','tel:')):
+                  continue
+              if not (root / clean).exists():
+                  missing.append(clean)
+          if missing:
+              raise SystemExit('Missing local assets referenced by index.html: ' + ', '.join(sorted(missing)))
+          required = [
+              'assets/products/pack-5l.webp',
+              'assets/products/pack-20l.webp',
+              'assets/products/pack-200l.webp',
+              'assets/products/lineup.webp',
+              'assets/brand/sanaam-logo-transparent.webp',
+              'assets/brand/favicon.png',
+              'assets/industry/base-oil.webp',
+              'assets/industry/manufacturing.webp',
+              'assets/og/sanaam-og-v6.jpg',
+          ]
+          for item in required:
+              p = root / item
+              if not p.is_file() or p.stat().st_size < 1000:
+                  raise SystemExit(f'Invalid required asset: {item}')
+          PY
+
+          if grep -Eiq 'Concept Product Catalogue|preliminary product|not a factory|ليست مصنعا|كتالوج منتج تجريبي|تجريبي' dist/index.html dist/translations.js; then
+            echo 'Prototype wording found; refusing deployment.' >&2
+            exit 1
+          fi
+
+          printf 'SANAAM build: %s\n' "$GITHUB_SHA" > dist/build.txt
+          printf '{"commit":"%s","packs":["5L","20L","200L"],"assets":"validated"}\n' "$GITHUB_SHA" > dist/deploy-verification.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -78,3 +118,30 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify public deployment
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          echo "Verifying ${PAGE_URL}"
+          ok=0
+          for attempt in $(seq 1 18); do
+            if curl -fsSL --retry 2 "${PAGE_URL}build.txt?v=${GITHUB_SHA}" | grep -Fq "$GITHUB_SHA"; then
+              ok=1
+              break
+            fi
+            echo "Waiting for Pages CDN, attempt ${attempt}/18"
+            sleep 10
+          done
+          test "$ok" = 1
+          curl -fsSL -o /tmp/pack-5l.webp "${PAGE_URL}assets/products/pack-5l.webp?v=${GITHUB_SHA}"
+          curl -fsSL -o /tmp/pack-20l.webp "${PAGE_URL}assets/products/pack-20l.webp?v=${GITHUB_SHA}"
+          curl -fsSL -o /tmp/pack-200l.webp "${PAGE_URL}assets/products/pack-200l.webp?v=${GITHUB_SHA}"
+          curl -fsSL -o /tmp/og.jpg "${PAGE_URL}assets/og/sanaam-og-v6.jpg?v=${GITHUB_SHA}"
+          test "$(file -b --mime-type /tmp/pack-5l.webp)" = "image/webp"
+          test "$(file -b --mime-type /tmp/pack-20l.webp)" = "image/webp"
+          test "$(file -b --mime-type /tmp/pack-200l.webp)" = "image/webp"
+          test "$(file -b --mime-type /tmp/og.jpg)" = "image/jpeg"
+          sha256sum /tmp/pack-5l.webp /tmp/pack-20l.webp /tmp/pack-200l.webp /tmp/og.jpg
