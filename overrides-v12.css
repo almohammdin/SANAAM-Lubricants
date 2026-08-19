@@ -1,0 +1,3 @@
+.pack-gallery{grid-template-columns:repeat(6,1fr)}
+@media(max-width:980px){.pack-gallery{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.pack-gallery{grid-template-columns:repeat(2,1fr)}}

@@ -1,8 +1,8 @@
 (()=>{
 'use strict';
-const ASSET_LOADER_VERSION='20260819-9';
+const ASSET_LOADER_VERSION='20260819-12';
 (()=>{const s=document.createElement('script');s.src=`assets-loader.js?v=${ASSET_LOADER_VERSION}`;s.async=true;document.head.appendChild(s)})();
-const BUILD='20260819-9';
+const BUILD='20260819-12';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PRODUCTS=window.SANAAM_PRODUCTS||[];
@@ -19,8 +19,8 @@ const familyTitle=(id)=>{const f=FAMILIES.find(x=>x.id===id);return f?t(f.titleK
 function renderProducts(){
   const host=$('#featuredProducts');
   if(!host)return;
-  const featured=PRODUCTS.filter(p=>p.featured).slice(0,9);
-  host.innerHTML=featured.map(p=>`<article class="product-card"><img src="${asset(p.image)}" alt="${esc(p.name)}" loading="lazy"><div class="product-content"><div class="grade">${esc(p.grade)}</div><h3>${esc(p.name)}</h3><p>${esc(p.type)}</p><div class="product-meta"><span>${esc(p.api)}</span><span>${esc(familyTitle(p.family))}</span></div><div class="pack-chips">${p.packaging.map(x=>`<i>${esc(x)}</i>`).join('')}</div><button class="product-rfq" type="button" data-rfq-product="${esc(p.id)}">${esc(t('nav.rfq'))}</button></div></article>`).join('');
+  const featured=PRODUCTS.filter(p=>p.featured);
+  host.innerHTML=featured.map(p=>`<article class="product-card"><img src="${asset(p.image)}" alt="${esc(p.name)}" width="900" height="675" loading="lazy"><div class="product-content"><div class="grade">${esc(p.grade)}</div><h3>${esc(p.name)}</h3><p>${esc(p.type)}</p><div class="product-meta"><span>${esc(p.api)}</span><span>${esc(familyTitle(p.family))}</span></div><div class="pack-chips">${p.packaging.map(x=>`<i>${esc(x)}</i>`).join('')}</div><button class="product-rfq" type="button" data-rfq-product="${esc(p.id)}">${esc(t('nav.rfq'))}</button></div></article>`).join('');
 
   const familyGrid=$('#familyGrid');
   if(familyGrid)familyGrid.innerHTML=FAMILIES.map(f=>{const items=PRODUCTS.filter(p=>p.family===f.id);return `<article class="family-card"><strong>${esc(familyTitle(f.id))}</strong><p>${items.map(x=>esc(x.grade)).join(' · ')}</p></article>`}).join('');

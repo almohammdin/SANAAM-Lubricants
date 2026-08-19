@@ -30,19 +30,33 @@ jobs:
           set -euo pipefail
           rm -rf dist
           mkdir -p dist
-          cp index.html styles.css app.js assets-loader.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
+          cp index.html styles.css overrides-v12.css app.js assets-loader.js config.js products.js translations.js translations-v12.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
           cp -R assets dist/assets
-          test -s dist/assets/brand/sanaam-logo-original.webp
+          test -s dist/assets/brand/sanaam-logo.jpg
           test -s dist/assets/brand/favicon.png
-          test -s dist/assets/products/lineup.webp
+          test -s dist/assets/products/lineup.jpg
+          test -s dist/assets/products/pcmo-5w20.jpg
+          test -s dist/assets/products/pcmo-5w30.jpg
+          test -s dist/assets/products/pcmo-5w40.jpg
+          test -s dist/assets/products/pcmo-10w30.jpg
+          test -s dist/assets/products/pcmo-10w40.jpg
+          test -s dist/assets/products/pcmo-15w50.jpg
+          test -s dist/assets/products/pcmo-20w50.jpg
+          test -s dist/assets/products/hdd-10w40.jpg
+          test -s dist/assets/products/hdd-15w40.jpg
+          test -s dist/assets/products/hdd-20w40.jpg
+          test -s dist/assets/products/hdd-20w50.jpg
+          test -s dist/assets/products/hdd-25w50.jpg
+          test -s dist/assets/products/gear-ep90-gl4.jpg
+          test -s dist/assets/products/brake-dot3.jpg
           test -s dist/assets/products/pack-1l.webp
           test -s dist/assets/products/pack-4l.webp
           test -s dist/assets/products/pack-5l.webp
-          test -s dist/assets/products/pack-20l.webp
-          test -s dist/assets/products/pack-200l.webp
-          test -s dist/assets/industry/base-oil.webp
+          test -s dist/assets/products/pack-20l-v12.jpg
+          test -s dist/assets/products/pack-200l-v12.jpg
+          test -s dist/assets/industry/base-oil.jpg
           test -s dist/assets/industry/manufacturing.webp
-          test -s dist/assets/og/sanaam-og-v8.jpg
+          test -s dist/assets/og/sanaam-og-v12.jpg
           printf 'SANAAM build: %s\n' "$GITHUB_SHA" > dist/build.txt
 
       - name: Setup Pages
