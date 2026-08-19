@@ -1,3 +1,12 @@
 .pack-gallery{grid-template-columns:repeat(6,1fr)}
 @media(max-width:980px){.pack-gallery{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:720px){.pack-gallery{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){
+  .pack-gallery{grid-template-columns:repeat(2,1fr)}
+  .header-inner{position:relative;min-height:118px;padding:8px 0 48px}
+  .lang-switch{display:flex;position:absolute;inset-inline:0;bottom:8px;width:100%;margin:0;z-index:2}
+  .lang-switch button{flex:1;min-width:0;padding:7px 8px}
+}
+@media(max-width:420px){
+  .header-inner{min-height:114px;padding-bottom:46px}
+  .lang-switch button{font-size:10.5px;padding:7px 5px}
+}
