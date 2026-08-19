@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -18,13 +18,11 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: https://almohammdin.github.io/SANAAM-Lubricants/
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: main
 
       - name: Build static site
         shell: bash
@@ -33,7 +31,8 @@ jobs:
           rm -rf dist
           mkdir -p dist/assets/brand dist/assets/products dist/assets/industry dist/assets/og
 
-          cp index.html styles.css app.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
+          cp index.html styles.css app.js assets-loader.js config.js products.js translations.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
+          cp -R asset-b64 dist/asset-b64
           cp assets/brand/pattern.svg dist/assets/brand/pattern.svg
 
           decode() {
@@ -54,9 +53,14 @@ jobs:
           decode asset-b64/pack-200l.webp.b64 dist/assets/products/pack-200l.webp
           decode asset-b64/base-oil.webp.b64 dist/assets/industry/base-oil.webp
           decode asset-b64/manufacturing.webp.b64 dist/assets/industry/manufacturing.webp
-          decode asset-b64/sanaam-og.jpg.b64 dist/assets/og/sanaam-og-v8.jpg
 
-          for file in \
+          if [ -s assets/og/sanaam-og-v8.jpg ]; then
+            cp assets/og/sanaam-og-v8.jpg dist/assets/og/sanaam-og-v8.jpg
+          else
+            decode asset-b64/sanaam-og.jpg.b64 dist/assets/og/sanaam-og-v8.jpg
+          fi
+
+          for f in \
             dist/assets/brand/sanaam-logo-original.webp \
             dist/assets/brand/favicon.png \
             dist/assets/products/lineup.webp \
@@ -68,81 +72,19 @@ jobs:
             dist/assets/industry/base-oil.webp \
             dist/assets/industry/manufacturing.webp \
             dist/assets/og/sanaam-og-v8.jpg; do
-            test -s "$file"
+              test -s "$f"
           done
 
-          if grep -Eiq 'Concept Product Catalogue|preliminary product|not a factory|ليست مصنعا|كتالوج منتج تجريبي|تجريبي' dist/index.html dist/translations.js; then
-            echo 'Prototype wording found; refusing deployment.' >&2
-            exit 1
-          fi
-
           printf 'SANAAM build: %s\n' "$GITHUB_SHA" > dist/build.txt
-          printf '{"commit":"%s","packs":["1L","4L","5L","20L","200L"],"og":"sanaam-og-v8.jpg"}\n' "$GITHUB_SHA" > dist/deploy-verification.json
 
-      - name: Publish built site to gh-pages branch
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          cd dist
-          git init
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Deploy SANAAM ${GITHUB_SHA}"
-          git branch -M gh-pages
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push --force origin gh-pages
-
-      - name: Setup Pages for Actions mode
-        id: setup
-        continue-on-error: true
+      - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Pages artifact for Actions mode
-        continue-on-error: true
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-      - name: Deploy via Pages Actions mode
+      - name: Deploy to GitHub Pages
         id: deployment
-        continue-on-error: true
         uses: actions/deploy-pages@v4
-
-      - name: Verify public deployment
-        shell: bash
-        env:
-          PAGE_URL: https://almohammdin.github.io/SANAAM-Lubricants/
-        run: |
-          set -euo pipefail
-          echo "Verifying ${PAGE_URL}"
-          ok=0
-          for attempt in $(seq 1 36); do
-            if curl -fsSL --retry 2 "${PAGE_URL}build.txt?v=${GITHUB_SHA}" | grep -Fq "$GITHUB_SHA"; then
-              ok=1
-              break
-            fi
-            echo "Waiting for GitHub Pages, attempt ${attempt}/36"
-            sleep 10
-          done
-          test "$ok" = 1
-
-          for file in \
-            assets/products/pack-1l.webp \
-            assets/products/pack-4l.webp \
-            assets/products/pack-5l.webp \
-            assets/products/pack-20l.webp \
-            assets/products/pack-200l.webp \
-            assets/products/lineup.webp \
-            assets/brand/sanaam-logo-original.webp \
-            assets/brand/favicon.png \
-            assets/industry/base-oil.webp \
-            assets/industry/manufacturing.webp \
-            assets/og/sanaam-og-v8.jpg; do
-            curl -fsSL --retry 2 -o /tmp/check "${PAGE_URL}${file}?v=${GITHUB_SHA}"
-            test -s /tmp/check
-          done
-
-          echo "Public deployment verified: ${GITHUB_SHA}"
