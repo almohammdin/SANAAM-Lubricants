@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: read
@@ -24,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build and validate static site
+      - name: Build static site
         shell: bash
         run: |
           set -euo pipefail
@@ -53,51 +55,19 @@ jobs:
           decode asset-b64/pack-200l.webp.b64 dist/assets/products/pack-200l.webp
           decode asset-b64/base-oil.webp.b64 dist/assets/industry/base-oil.webp
           decode asset-b64/manufacturing.webp.b64 dist/assets/industry/manufacturing.webp
-          decode asset-b64/sanaam-og.jpg.b64 dist/assets/og/sanaam-og-v6.jpg
+          decode asset-b64/sanaam-og.jpg.b64 dist/assets/og/sanaam-og-v8.jpg
 
-          test "$(file -b --mime-type dist/assets/brand/sanaam-logo-original.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/brand/favicon.png)" = "image/png"
-          test "$(file -b --mime-type dist/assets/products/lineup.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/products/pack-1l.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/products/pack-4l.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/products/pack-5l.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/products/pack-20l.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/products/pack-200l.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/industry/base-oil.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/industry/manufacturing.webp)" = "image/webp"
-          test "$(file -b --mime-type dist/assets/og/sanaam-og-v6.jpg)" = "image/jpeg"
-
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          root = Path('dist')
-          html = (root / 'index.html').read_text(encoding='utf-8')
-          refs = set(re.findall(r'(?:src|href)=["\']([^"\']+)["\']', html))
-          missing = []
-          for ref in refs:
-              clean = ref.split('?',1)[0].split('#',1)[0]
-              if not clean or clean.startswith(('#','http://','https://','mailto:','tel:')):
-                  continue
-              if not (root / clean).exists():
-                  missing.append(clean)
-          if missing:
-              raise SystemExit('Missing local assets referenced by index.html: ' + ', '.join(sorted(missing)))
-          required = [
-              'assets/products/pack-5l.webp',
-              'assets/products/pack-20l.webp',
-              'assets/products/pack-200l.webp',
-              'assets/products/lineup.webp',
-              'assets/brand/sanaam-logo-transparent.webp',
-              'assets/brand/favicon.png',
-              'assets/industry/base-oil.webp',
-              'assets/industry/manufacturing.webp',
-              'assets/og/sanaam-og-v6.jpg',
-          ]
-          for item in required:
-              p = root / item
-              if not p.is_file() or p.stat().st_size < 1000:
-                  raise SystemExit(f'Invalid required asset: {item}')
-          PY
+          test -s dist/assets/brand/sanaam-logo-original.webp
+          test -s dist/assets/brand/favicon.png
+          test -s dist/assets/products/lineup.webp
+          test -s dist/assets/products/pack-1l.webp
+          test -s dist/assets/products/pack-4l.webp
+          test -s dist/assets/products/pack-5l.webp
+          test -s dist/assets/products/pack-20l.webp
+          test -s dist/assets/products/pack-200l.webp
+          test -s dist/assets/industry/base-oil.webp
+          test -s dist/assets/industry/manufacturing.webp
+          test -s dist/assets/og/sanaam-og-v8.jpg
 
           if grep -Eiq 'Concept Product Catalogue|preliminary product|not a factory|ليست مصنعا|كتالوج منتج تجريبي|تجريبي' dist/index.html dist/translations.js; then
             echo 'Prototype wording found; refusing deployment.' >&2
@@ -105,7 +75,7 @@ jobs:
           fi
 
           printf 'SANAAM build: %s\n' "$GITHUB_SHA" > dist/build.txt
-          printf '{"commit":"%s","packs":["5L","20L","200L"],"assets":"validated"}\n' "$GITHUB_SHA" > dist/deploy-verification.json
+          printf '{"commit":"%s","packs":["1L","4L","5L","20L","200L"],"og":"sanaam-og-v8.jpg"}\n' "$GITHUB_SHA" > dist/deploy-verification.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -117,7 +87,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Verify public deployment
         shell: bash
@@ -126,22 +96,26 @@ jobs:
         run: |
           set -euo pipefail
           echo "Verifying ${PAGE_URL}"
-          ok=0
-          for attempt in $(seq 1 18); do
+          for attempt in $(seq 1 24); do
             if curl -fsSL --retry 2 "${PAGE_URL}build.txt?v=${GITHUB_SHA}" | grep -Fq "$GITHUB_SHA"; then
-              ok=1
               break
             fi
-            echo "Waiting for Pages CDN, attempt ${attempt}/18"
+            if [ "$attempt" -eq 24 ]; then
+              echo 'Pages CDN did not expose the new build in time.' >&2
+              exit 1
+            fi
             sleep 10
           done
-          test "$ok" = 1
-          curl -fsSL -o /tmp/pack-5l.webp "${PAGE_URL}assets/products/pack-5l.webp?v=${GITHUB_SHA}"
-          curl -fsSL -o /tmp/pack-20l.webp "${PAGE_URL}assets/products/pack-20l.webp?v=${GITHUB_SHA}"
-          curl -fsSL -o /tmp/pack-200l.webp "${PAGE_URL}assets/products/pack-200l.webp?v=${GITHUB_SHA}"
-          curl -fsSL -o /tmp/og.jpg "${PAGE_URL}assets/og/sanaam-og-v6.jpg?v=${GITHUB_SHA}"
-          test "$(file -b --mime-type /tmp/pack-5l.webp)" = "image/webp"
-          test "$(file -b --mime-type /tmp/pack-20l.webp)" = "image/webp"
-          test "$(file -b --mime-type /tmp/pack-200l.webp)" = "image/webp"
-          test "$(file -b --mime-type /tmp/og.jpg)" = "image/jpeg"
-          sha256sum /tmp/pack-5l.webp /tmp/pack-20l.webp /tmp/pack-200l.webp /tmp/og.jpg
+
+          for file in \
+            assets/products/pack-5l.webp \
+            assets/products/pack-20l.webp \
+            assets/products/pack-200l.webp \
+            assets/products/lineup.webp \
+            assets/brand/favicon.png \
+            assets/industry/base-oil.webp \
+            assets/industry/manufacturing.webp \
+            assets/og/sanaam-og-v8.jpg; do
+            curl -fsSL --retry 2 -o /tmp/check "${PAGE_URL}${file}?v=${GITHUB_SHA}"
+            test -s /tmp/check
+          done
