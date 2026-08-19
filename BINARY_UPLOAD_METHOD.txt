@@ -1,1 +1,1 @@
-Temporary note: binary assets are uploaded through Git blob/tree API, not as text files.
+SANAAM direct binary assets are committed under assets/* for GitHub Pages serving.
