@@ -47,27 +47,12 @@ jobs:
           decode asset-b64/lineup.webp.b64 dist/assets/products/lineup.webp
           decode asset-b64/pack-1l.webp.b64 dist/assets/products/pack-1l.webp
           decode asset-b64/pack-4l.webp.b64 dist/assets/products/pack-4l.webp
+          decode asset-b64/pack-5l.webp.b64 dist/assets/products/pack-5l.webp
+          decode asset-b64/pack-20l.webp.b64 dist/assets/products/pack-20l.webp
+          decode asset-b64/pack-200l.webp.b64 dist/assets/products/pack-200l.webp
           decode asset-b64/base-oil.webp.b64 dist/assets/industry/base-oil.webp
           decode asset-b64/manufacturing.webp.b64 dist/assets/industry/manufacturing.webp
           decode asset-b64/sanaam-og.jpg.b64 dist/assets/og/sanaam-og-v6.jpg
-
-          python -m pip install --quiet pillow
-          python - <<'PY'
-          from PIL import Image, ImageOps
-          src='dist/assets/products/lineup.webp'
-          im=Image.open(src).convert('RGB')
-          w,h=im.size
-          # Crop dedicated export-pack visuals from the supplied product lineup.
-          boxes={
-            'pack-5l.webp':(0.69*w,0.43*h,0.86*w,0.99*h),
-            'pack-20l.webp':(0.21*w,0.10*h,0.40*w,0.72*h),
-            'pack-200l.webp':(0.64*w,0.03*h,0.84*w,0.68*h),
-          }
-          for name,box in boxes.items():
-              crop=im.crop(tuple(map(int,box)))
-              crop=ImageOps.pad(crop,(700,700),color='white',method=Image.Resampling.LANCZOS)
-              crop.save('dist/assets/products/'+name,'WEBP',quality=92,method=6)
-          PY
 
           test "$(file -b --mime-type dist/assets/brand/sanaam-logo-original.webp)" = "image/webp"
           test "$(file -b --mime-type dist/assets/brand/favicon.png)" = "image/png"
