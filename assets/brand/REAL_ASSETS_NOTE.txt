@@ -1,0 +1,1 @@
+Direct binary image assets are now committed to the repository and used by the site. Do not replace the approved SANAAM logo with redrawn SVG variants.
