@@ -1,6 +1,8 @@
 (()=>{
 'use strict';
-const BUILD='20260819-8';
+const ASSET_LOADER_VERSION='20260819-9';
+(()=>{const s=document.createElement('script');s.src=`assets-loader.js?v=${ASSET_LOADER_VERSION}`;s.async=true;document.head.appendChild(s)})();
+const BUILD='20260819-9';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PRODUCTS=window.SANAAM_PRODUCTS||[];
