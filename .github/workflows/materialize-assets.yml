@@ -1,0 +1,59 @@
+name: Materialize SANAAM assets
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'asset-b64/**'
+      - 'asset-chunks/**'
+      - '.github/workflows/materialize-assets.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Build real image files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/brand assets/products assets/industry assets/og
+
+          # Rebuild any chunked Base64 sources first.
+          if compgen -G 'asset-chunks/pack-5l.webp.part*' > /dev/null; then cat asset-chunks/pack-5l.webp.part* > asset-b64/pack-5l.webp.b64; fi
+          if compgen -G 'asset-chunks/pack-20l.webp.part*' > /dev/null; then cat asset-chunks/pack-20l.webp.part* > asset-b64/pack-20l.webp.b64; fi
+          if compgen -G 'asset-chunks/pack-200l.webp.part*' > /dev/null; then cat asset-chunks/pack-200l.webp.part* > asset-b64/pack-200l.webp.b64; fi
+
+          decode() { src="$1"; out="$2"; [ -f "$src" ] && base64 -d "$src" > "$out"; }
+          decode asset-b64/logo.webp.b64 assets/brand/sanaam-logo-original.webp
+          decode asset-b64/favicon.png.b64 assets/brand/favicon.png
+          decode asset-b64/lineup.webp.b64 assets/products/lineup.webp
+          decode asset-b64/pack-1l.webp.b64 assets/products/pack-1l.webp
+          decode asset-b64/pack-4l.webp.b64 assets/products/pack-4l.webp
+          decode asset-b64/pack-5l.webp.b64 assets/products/pack-5l.webp
+          decode asset-b64/pack-20l.webp.b64 assets/products/pack-20l.webp
+          decode asset-b64/pack-200l.webp.b64 assets/products/pack-200l.webp
+          decode asset-b64/base-oil.webp.b64 assets/industry/base-oil.webp
+          decode asset-b64/manufacturing.webp.b64 assets/industry/manufacturing.webp
+          decode asset-b64/sanaam-og.jpg.b64 assets/og/sanaam-og.jpg
+
+          # Fail if any core visual is missing or invalid.
+          test "$(file -b --mime-type assets/brand/sanaam-logo-original.webp)" = 'image/webp'
+          test "$(file -b --mime-type assets/brand/favicon.png)" = 'image/png'
+          test "$(file -b --mime-type assets/products/lineup.webp)" = 'image/webp'
+          test "$(file -b --mime-type assets/industry/base-oil.webp)" = 'image/webp'
+          test "$(file -b --mime-type assets/industry/manufacturing.webp)" = 'image/webp'
+          test "$(file -b --mime-type assets/og/sanaam-og.jpg)" = 'image/jpeg'
+      - name: Commit real assets to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets asset-b64/pack-5l.webp.b64 asset-b64/pack-20l.webp.b64 asset-b64/pack-200l.webp.b64 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Materialize SANAAM image assets'
+          git push origin HEAD:main
