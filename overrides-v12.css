@@ -1,10 +1,25 @@
 .pack-gallery{grid-template-columns:repeat(6,1fr)}
+.application-card{padding:0}
+.application-card:after{display:none}
+.application-card-media{width:100%;aspect-ratio:4/3;overflow:hidden;background:#e9ece8}
+.application-card-media img{display:block;width:100%;height:100%;object-fit:cover}
+.application-card-body{padding:22px 23px 23px;position:relative}
+.application-card-body>span{display:inline-flex;background:var(--green);color:#fff;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800;letter-spacing:.06em}
+.footer-origin{border-top:1px solid rgba(255,255,255,.12);margin-top:26px;padding-top:24px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-origin-logos{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.footer-origin-logo{height:72px;min-width:142px;padding:8px 13px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.footer-origin-logo img{display:block;width:auto;height:auto;max-width:150px;max-height:54px;object-fit:contain}
+.footer-origin-logo.is-aramco{min-width:86px}.footer-origin-logo.is-aramco img{max-width:62px;max-height:58px}
+.footer-origin-note{margin:0;max-width:610px;color:#aab8bd;font-size:12px;line-height:1.75}
 @media(max-width:980px){.pack-gallery{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){
   .pack-gallery{grid-template-columns:repeat(2,1fr)}
   .header-inner{position:relative;min-height:118px;padding:8px 0 48px}
   .lang-switch{display:flex;position:absolute;inset-inline:0;bottom:8px;width:100%;margin:0;z-index:2}
   .lang-switch button{flex:1;min-width:0;padding:7px 8px}
+  .application-card-body{padding:20px}
+  .footer-origin{align-items:flex-start;flex-direction:column;gap:16px}
+  .footer-origin-logo{height:64px;min-width:128px}.footer-origin-logo img{max-width:136px;max-height:46px}.footer-origin-logo.is-aramco{min-width:78px}.footer-origin-logo.is-aramco img{max-height:50px}
 }
 @media(max-width:420px){
   .header-inner{min-height:114px;padding-bottom:46px}
