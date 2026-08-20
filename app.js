@@ -2,7 +2,7 @@
 'use strict';
 const ASSET_LOADER_VERSION='20260819-12';
 (()=>{const s=document.createElement('script');s.src=`assets-loader.js?v=${ASSET_LOADER_VERSION}`;s.async=true;document.head.appendChild(s)})();
-const BUILD='20260820-6';
+const BUILD='20260820-7';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PRODUCTS=window.SANAAM_PRODUCTS||[];
@@ -31,13 +31,10 @@ function renderProducts(){
   if(!host)return;
   const featured=PRODUCTS.filter(p=>p.featured);
   host.innerHTML=featured.map(p=>`<article class="product-card"><img src="${asset(p.image)}" alt="${esc(p.name)}" width="900" height="675" loading="lazy"><div class="product-content"><div class="grade">${esc(p.grade)}</div><h3>${esc(p.name)}</h3><p>${esc(p.type)}</p><div class="product-meta"><span>${esc(p.api)}</span><span>${esc(familyTitle(p.family))}</span></div><div class="pack-chips">${p.packaging.map(x=>`<i>${esc(x)}</i>`).join('')}</div><button class="product-rfq" type="button" data-rfq-product="${esc(p.id)}">${esc(t('nav.rfq'))}</button></div></article>`).join('');
-
   const familyGrid=$('#familyGrid');
   if(familyGrid)familyGrid.innerHTML=FAMILIES.map(f=>{const items=PRODUCTS.filter(p=>p.family===f.id);return `<article class="family-card"><strong>${esc(familyTitle(f.id))}</strong><p>${items.map(x=>esc(x.grade)).join(' · ')}</p></article>`}).join('');
-
   const fullRange=$('#fullRange');
   if(fullRange)fullRange.innerHTML=FAMILIES.map(f=>`<section class="family-range"><h3>${esc(familyTitle(f.id))}</h3><div class="range-chips">${PRODUCTS.filter(p=>p.family===f.id).map(p=>`<button type="button" data-rfq-product="${esc(p.id)}">${esc(p.grade)}</button>`).join('')}</div></section>`).join('');
-
   $$('[data-rfq-product]').forEach(btn=>btn.addEventListener('click',()=>selectForRfq(btn.dataset.rfqProduct)));
 }
 
@@ -54,32 +51,26 @@ function renderApplications(){
   if(!host||!Array.isArray(cards))return;
   host.innerHTML=cards.map((c,index)=>{
     const image=APPLICATION_IMAGES[index];
-    return `<article class="application-card"><div class="application-card-media"><img src="${asset(image)}" alt="${esc(c.title)}" width="900" height="675" loading="lazy" onerror="this.closest('.application-card-media').classList.add('image-error')"></div><div class="application-card-body"><span>${esc(c.code)}</span><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></article>`;
+    return `<article class="application-card"><div class="application-card-media"><img src="${asset(image)}" alt="${esc(c.title)}" width="900" height="675" loading="eager" decoding="async"></div><div class="application-card-body"><span>${esc(c.code)}</span><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></article>`;
   }).join('');
 }
 function renderProcesses(){const p=t('manufacturing.process');const host=$('#processList');if(host&&Array.isArray(p))host.innerHTML=p.map(x=>`<span>${esc(x)}</span>`).join('')}
 function renderDistributorPoints(){const p=t('distributors.points');const host=$('#distributorPoints');if(host&&Array.isArray(p))host.innerHTML=p.map(x=>`<div>${esc(x)}</div>`).join('')}
 function renderFooterSource(){
   const footerGrid=$('.site-footer .footer-grid');
-  if(!footerGrid)return;
-  footerGrid.innerHTML=`
-    <div class="footer-brand-compact">
-      <img class="footer-sanaam-logo" src="${asset('assets/brand/sanaam-logo-original.webp')}" alt="SANAAM Lubricants">
-      <p>${esc(t('footer'))}</p>
-    </div>
-    <div class="footer-source-compact">
-      <div class="footer-source-logos">
-        <span class="footer-partner-mark is-saudi-made"><img src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made"></span>
-        <span class="footer-partner-mark is-aramco"><img src="${asset('assets/partners/aramco.webp')}" alt="Saudi Aramco"></span>
-      </div>
-      <p class="footer-source-note">${esc(FOOTER_SOURCE_COPY[state.lang]||FOOTER_SOURCE_COPY.en)}</p>
-    </div>
-    <div class="footer-links">
-      <a href="#products">${esc(t('nav.products'))}</a>
-      <a href="#applications">${esc(t('nav.applications'))}</a>
-      <a href="#packaging">${esc(t('nav.packaging'))}</a>
-      <a href="#rfq">${esc(t('nav.rfq'))}</a>
-    </div>`;
+  const footerBrand=$('.site-footer .footer-brand');
+  const footerLinks=$('.site-footer .footer-links');
+  if(!footerGrid||!footerBrand||!footerLinks)return;
+  let host=$('#sanaamFooterSource');
+  if(!host){
+    host=document.createElement('div');
+    host.id='sanaamFooterSource';
+    host.className='footer-source-compact';
+    host.innerHTML=`<div class="footer-source-logos"><img class="footer-source-logo is-saudi-made" src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made"><img class="footer-source-logo is-aramco" src="${asset('assets/partners/aramco-footer.webp')}" alt="Saudi Aramco"></div><p class="footer-source-note" id="footerSourceNote"></p>`;
+    footerGrid.insertBefore(host,footerLinks);
+  }
+  const note=$('#footerSourceNote');
+  if(note)note.textContent=FOOTER_SOURCE_COPY[state.lang]||FOOTER_SOURCE_COPY.en;
 }
 
 function populateRfqProducts(keep=true){
@@ -132,32 +123,12 @@ async function submitRfq(e){
   const product=PRODUCTS.find(p=>p.id===$('#rfqProduct').value);
   const fd=new FormData();
   fd.append('_subject',`SANAAM RFQ | ${$('#rfqMarket').value} | ${$('#rfqCompany').value}`);
-  fd.append('_template','table');
-  fd.append('_captcha','false');
+  fd.append('_template','table');fd.append('_captcha','false');
   fd.append('Product',product?`${product.name} · ${product.grade}`:$('#rfqProduct').value);
-  fd.append('Pack Size',$('#rfqPack').value);
-  fd.append('Estimated Quantity',$('#rfqQuantity').value);
-  fd.append('Market / Country',$('#rfqMarket').value);
-  fd.append('Destination Port',$('#rfqPort').value);
-  fd.append('Company Name',$('#rfqCompany').value);
-  fd.append('Contact Person',$('#rfqContact').value);
-  fd.append('WhatsApp / Phone',$('#rfqPhone').value);
-  fd.append('Notes',$('#rfqNotes').value);
+  fd.append('Pack Size',$('#rfqPack').value);fd.append('Estimated Quantity',$('#rfqQuantity').value);fd.append('Market / Country',$('#rfqMarket').value);fd.append('Destination Port',$('#rfqPort').value);fd.append('Company Name',$('#rfqCompany').value);fd.append('Contact Person',$('#rfqContact').value);fd.append('WhatsApp / Phone',$('#rfqPhone').value);fd.append('Notes',$('#rfqNotes').value);
   btn.disabled=true;status.textContent=t('rfq.sending');status.className='';
-  try{
-    const res=await fetch(CONFIG.formSubmitEndpoint,{method:'POST',headers:{Accept:'application/json'},body:fd});
-    if(!res.ok)throw new Error('send');
-    status.textContent=t('rfq.sent');status.className='ok';
-    e.target.reset();populateRfqProducts(false);
-  }catch(err){
-    status.textContent=t('rfq.error');status.className='err';
-  }finally{btn.disabled=false}
+  try{const res=await fetch(CONFIG.formSubmitEndpoint,{method:'POST',headers:{Accept:'application/json'},body:fd});if(!res.ok)throw new Error('send');status.textContent=t('rfq.sent');status.className='ok';e.target.reset();populateRfqProducts(false)}catch(err){status.textContent=t('rfq.error');status.className='err'}finally{btn.disabled=false}
 }
-
-function init(){
-  bindNavigation();
-  $('#rfqForm')?.addEventListener('submit',submitRfq);
-  applyLanguage();
-}
+function init(){bindNavigation();$('#rfqForm')?.addEventListener('submit',submitRfq);applyLanguage()}
 init();
 })();
