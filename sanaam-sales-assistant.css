@@ -1,0 +1,31 @@
+.sanaam-sales-entry-section{padding:34px 0;background:#fff;border-bottom:1px solid rgba(15,34,56,.07)}
+.sanaam-sales-card{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:28px;align-items:center;padding:30px 34px;border-radius:28px;background:radial-gradient(circle at 85% 20%,rgba(212,175,55,.22),transparent 34%),linear-gradient(135deg,#071e2b 0%,#064b3e 58%,#0b6a56 100%);box-shadow:0 22px 48px rgba(15,34,56,.18);color:#fff}
+.sanaam-sales-card:before{content:"";position:absolute;inset:0;background:url('assets/brand/pattern.svg') center/cover;opacity:.08;pointer-events:none}
+.sanaam-sales-copy,.sanaam-sales-mic-wrap{position:relative;z-index:1}
+.sanaam-sales-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid rgba(240,200,84,.32);border-radius:999px;background:rgba(255,255,255,.07);color:#f0d46d;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.sanaam-sales-copy h2{margin:12px 0 8px;font-size:clamp(26px,3.2vw,42px);line-height:1.06;letter-spacing:-.025em}
+.sanaam-sales-copy p{margin:0;max-width:720px;color:#dce8e4;font-size:15px;line-height:1.75}
+.sanaam-sales-langs{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.sanaam-sales-langs span{padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.08);color:#dfe9e6;font-size:10px;font-weight:700}
+.sanaam-sales-mic-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:170px}
+.sanaam-sales-mic{width:96px;height:96px;border:1px solid rgba(255,255,255,.34);border-radius:50%;display:grid;place-items:center;cursor:pointer;background:linear-gradient(180deg,#f0c854,#d4af37);color:#071e2b;box-shadow:0 0 0 10px rgba(212,175,55,.09),0 18px 38px rgba(0,0,0,.22);transition:transform .2s ease,box-shadow .2s ease}
+.sanaam-sales-mic:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 0 0 12px rgba(212,175,55,.11),0 22px 42px rgba(0,0,0,.26)}
+.sanaam-sales-mic:focus-visible{outline:3px solid #fff;outline-offset:5px}
+.sanaam-sales-mic svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.sanaam-sales-mic.is-live{animation:sanaamMicPulse 1.35s ease-in-out infinite}
+@keyframes sanaamMicPulse{50%{box-shadow:0 0 0 18px rgba(212,175,55,.08),0 22px 42px rgba(0,0,0,.26)}}
+.sanaam-sales-mic-label{font-size:13px;font-weight:850;color:#fff;text-align:center}
+.sanaam-sales-state{min-height:18px;color:#bcd3cc;font-size:11px;text-align:center}
+.sanaam-sales-product{position:relative;z-index:1;grid-column:1/-1;display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:14px;align-items:center;margin-top:2px;padding:13px;border:1px solid rgba(255,255,255,.15);border-radius:18px;background:rgba(255,255,255,.08);backdrop-filter:blur(8px)}
+.sanaam-sales-product[hidden]{display:none}
+.sanaam-sales-product img{width:84px;height:70px;border-radius:12px;object-fit:contain;background:#fff}
+.sanaam-sales-product strong{display:block;font-size:15px}.sanaam-sales-product p{margin:4px 0 0;color:#cfe0db;font-size:11px}.sanaam-sales-product button{border:0;border-radius:11px;padding:10px 12px;background:#fff;color:#064b3e;font:inherit;font-size:11px;font-weight:850;cursor:pointer}
+.sanaam-voice-overlay{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));z-index:220;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
+.sanaam-voice-overlay[hidden]{display:none}
+.sanaam-voice-card{width:min(680px,100%);min-height:66px;display:grid;grid-template-columns:46px minmax(0,1fr) 38px;align-items:center;gap:12px;padding:9px 10px 9px 12px;border:1px solid rgba(240,200,84,.42);border-radius:18px;background:linear-gradient(135deg,#071e2b,#064b3e);box-shadow:0 16px 40px rgba(0,0,0,.28);color:#fff;pointer-events:auto}
+.sanaam-voice-bars{width:42px;height:42px;border-radius:13px;background:rgba(212,175,55,.15);display:flex;align-items:center;justify-content:center;gap:3px}
+.sanaam-voice-bars i{width:3px;height:14px;border-radius:99px;background:#f0d46d;animation:sanaamVoiceBars .9s ease-in-out infinite}.sanaam-voice-bars i:nth-child(2){height:24px;animation-delay:.15s}.sanaam-voice-bars i:nth-child(3){height:18px;animation-delay:.3s}
+@keyframes sanaamVoiceBars{50%{transform:scaleY(.42);opacity:.62}}
+.sanaam-voice-copy{min-width:0}.sanaam-voice-status{display:block;font-size:12px}.sanaam-voice-card p{margin:3px 0 0;color:rgba(255,255,255,.74);font-size:10px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sanaam-voice-stop{width:36px;height:36px;border:1px solid rgba(255,255,255,.18);border-radius:11px;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:20px;line-height:1;cursor:pointer}
+html[dir=rtl] .sanaam-sales-card{text-align:right}html[dir=ltr] .sanaam-sales-card{text-align:left}
+@media(max-width:760px){.sanaam-sales-entry-section{padding:20px 0}.sanaam-sales-card{grid-template-columns:1fr;gap:18px;padding:23px 20px;border-radius:22px}.sanaam-sales-mic-wrap{min-height:auto;padding-top:4px}.sanaam-sales-mic{width:88px;height:88px}.sanaam-sales-product{grid-template-columns:68px minmax(0,1fr)}.sanaam-sales-product img{width:68px;height:62px}.sanaam-sales-product button{grid-column:1/-1;width:100%}.sanaam-voice-overlay{padding:0 8px}.sanaam-voice-card{min-height:60px;grid-template-columns:40px minmax(0,1fr) 34px;gap:8px;padding:8px}.sanaam-voice-bars{width:38px;height:38px}.sanaam-voice-stop{width:34px;height:34px}}
