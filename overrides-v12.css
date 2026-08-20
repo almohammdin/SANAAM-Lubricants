@@ -10,20 +10,22 @@
 html[lang=ar] .hero h1{display:flex;flex-direction:column;align-items:flex-start;gap:12px;line-height:.9;margin:15px 0 22px}
 html[lang=ar] .hero h1 span{display:block;direction:ltr;unicode-bidi:isolate;font-size:.28em;line-height:1.1;letter-spacing:.055em;margin:0;color:#dce8e4;white-space:nowrap}
 
-/* Keep the original SANAAM footer logo/frame exactly as designed in styles.css. */
+/* Use tightly cropped, optimized footer artwork so logos render at their real size. */
 .site-footer{padding:30px 0}
-.footer-grid{display:grid;grid-template-columns:240px minmax(390px,1fr) auto;gap:22px;align-items:center}
+.footer-grid{display:grid;grid-template-columns:190px minmax(360px,1fr) auto;gap:22px;align-items:center}
+.footer-logo-frame{width:180px;min-height:0;aspect-ratio:505/380;padding:0;border-radius:14px;background:#fff;overflow:hidden}
+.footer-logo-frame img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain}
 .footer-source-compact{display:flex;align-items:center;gap:14px;min-width:0}
 .footer-source-logos{display:flex;align-items:center;gap:14px;flex:0 0 auto}
 .footer-source-logo{display:block;width:auto;height:auto;object-fit:contain;background:transparent;filter:none}
 .footer-source-logo.is-saudi-made{width:112px;max-height:44px}
-.footer-source-logo.is-aramco{width:150px;max-height:48px}
+.footer-source-logo.is-aramco{width:180px;max-height:none}
 .footer-source-note{margin:0;max-width:320px;color:#aab8bd;font-size:11px;line-height:1.55}
 .footer-links{display:flex;justify-content:flex-end;align-items:center;gap:14px;flex-wrap:wrap}
 .footer-links a{font-size:12px;white-space:nowrap}
 
 @media(max-width:1100px){
-  .footer-grid{grid-template-columns:220px minmax(0,1fr);gap:16px 22px}
+  .footer-grid{grid-template-columns:190px minmax(0,1fr);gap:16px 22px}
   .footer-source-compact{grid-column:2;grid-row:1;flex-wrap:wrap}
   .footer-links{grid-column:2;grid-row:2;justify-content:flex-start}
 }
@@ -44,7 +46,8 @@ html[lang=ar] .hero h1 span{display:block;direction:ltr;unicode-bidi:isolate;fon
   .footer-source-compact{align-items:flex-start;flex-direction:column;gap:10px}
   .footer-source-logos{gap:12px;flex-wrap:wrap}
   .footer-source-logo.is-saudi-made{width:104px;max-height:42px}
-  .footer-source-logo.is-aramco{width:138px;max-height:46px}
+  .footer-source-logo.is-aramco{width:168px;max-height:none}
+  .footer-logo-frame{width:170px;min-height:0}
   .footer-source-note{max-width:100%}
   .footer-links{justify-content:flex-start}
 }

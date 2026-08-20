@@ -2,7 +2,7 @@
 'use strict';
 const ASSET_LOADER_VERSION='20260819-12';
 (()=>{const s=document.createElement('script');s.src=`assets-loader.js?v=${ASSET_LOADER_VERSION}`;s.async=true;document.head.appendChild(s)})();
-const BUILD='20260820-7';
+const BUILD='20260820-8';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PRODUCTS=window.SANAAM_PRODUCTS||[];
@@ -17,7 +17,7 @@ const asset=(path)=>`${path}${path.includes('?')?'&':'?'}v=${BUILD}`;
 const familyTitle=(id)=>{const f=FAMILIES.find(x=>x.id===id);return f?t(f.titleKey):id};
 const APPLICATION_IMAGES=[
   'assets/applications/automotive.webp',
-  'assets/applications/heavy-duty-v2.webp',
+  'assets/applications/heavy-duty-card.webp',
   'assets/applications/industrial.webp'
 ];
 const FOOTER_SOURCE_COPY={
@@ -66,7 +66,7 @@ function renderFooterSource(){
     host=document.createElement('div');
     host.id='sanaamFooterSource';
     host.className='footer-source-compact';
-    host.innerHTML=`<div class="footer-source-logos"><img class="footer-source-logo is-saudi-made" src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made"><img class="footer-source-logo is-aramco" src="${asset('assets/partners/aramco-footer.webp')}" alt="Saudi Aramco"></div><p class="footer-source-note" id="footerSourceNote"></p>`;
+    host.innerHTML=`<div class="footer-source-logos"><img class="footer-source-logo is-saudi-made" src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made"><img class="footer-source-logo is-aramco" src="${asset('assets/partners/aramco-footer-clean.webp')}" alt="Saudi Aramco"></div><p class="footer-source-note" id="footerSourceNote"></p>`;
     footerGrid.insertBefore(host,footerLinks);
   }
   const note=$('#footerSourceNote');
