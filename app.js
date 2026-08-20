@@ -2,7 +2,7 @@
 'use strict';
 const ASSET_LOADER_VERSION='20260819-12';
 (()=>{const s=document.createElement('script');s.src=`assets-loader.js?v=${ASSET_LOADER_VERSION}`;s.async=true;document.head.appendChild(s)})();
-const BUILD='20260819-12';
+const BUILD='20260820-4';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PRODUCTS=window.SANAAM_PRODUCTS||[];
@@ -15,6 +15,16 @@ const t=(path)=>path.split('.').reduce((o,k)=>o?.[k],I18N[state.lang])??path;
 const esc=(v)=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));
 const asset=(path)=>`${path}${path.includes('?')?'&':'?'}v=${BUILD}`;
 const familyTitle=(id)=>{const f=FAMILIES.find(x=>x.id===id);return f?t(f.titleKey):id};
+const APPLICATION_IMAGES={
+  'AUTOMOTIVE':'assets/applications/automotive.webp',
+  'HEAVY-DUTY & OFF-HIGHWAY':'assets/applications/heavy-duty.webp',
+  'INDUSTRIAL':'assets/applications/industrial.webp'
+};
+const FOOTER_SOURCE_COPY={
+  ar:'تعتمد تركيبات SANAAM على زيوت أساس عالية الجودة من أرامكو السعودية.',
+  en:'SANAAM formulations use high-quality Saudi base oils from Saudi Aramco.',
+  so:'Isku-darrada SANAAM waxay isticmaalaan saliido aasaasi ah oo tayo sare leh oo ka yimaada Saudi Aramco.'
+};
 
 function renderProducts(){
   const host=$('#featuredProducts');
@@ -42,10 +52,27 @@ function renderApplications(){
   const cards=t('applications.cards');
   const host=$('#applicationsGrid');
   if(!host||!Array.isArray(cards))return;
-  host.innerHTML=cards.map(c=>`<article class="application-card"><span>${esc(c.code)}</span><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></article>`).join('');
+  host.innerHTML=cards.map(c=>{
+    const image=APPLICATION_IMAGES[c.code];
+    return `<article class="application-card">${image?`<div class="application-card-media"><img src="${asset(image)}" alt="${esc(c.title)}" width="400" height="300" loading="lazy"></div>`:''}<div class="application-card-body"><span>${esc(c.code)}</span><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></article>`;
+  }).join('');
 }
 function renderProcesses(){const p=t('manufacturing.process');const host=$('#processList');if(host&&Array.isArray(p))host.innerHTML=p.map(x=>`<span>${esc(x)}</span>`).join('')}
 function renderDistributorPoints(){const p=t('distributors.points');const host=$('#distributorPoints');if(host&&Array.isArray(p))host.innerHTML=p.map(x=>`<div>${esc(x)}</div>`).join('')}
+function renderFooterSource(){
+  const footer=$('.site-footer');
+  if(!footer)return;
+  let host=$('#sanaamFooterSource');
+  if(!host){
+    host=document.createElement('div');
+    host.id='sanaamFooterSource';
+    host.className='container footer-origin';
+    host.innerHTML=`<div class="footer-origin-logos"><div class="footer-origin-logo is-aramco"><img src="${asset('assets/partners/aramco.webp')}" alt="Saudi Aramco" width="280" height="280" loading="lazy"></div><div class="footer-origin-logo is-saudi-made"><img src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made" width="280" height="144" loading="lazy"></div></div><p class="footer-origin-note" id="footerSourceNote"></p>`;
+    footer.appendChild(host);
+  }
+  const note=$('#footerSourceNote');
+  if(note)note.textContent=FOOTER_SOURCE_COPY[state.lang]||FOOTER_SOURCE_COPY.en;
+}
 
 function populateRfqProducts(keep=true){
   const select=$('#rfqProduct');
@@ -75,6 +102,7 @@ function applyLanguage(){
   renderApplications();
   renderProcesses();
   renderDistributorPoints();
+  renderFooterSource();
   populateRfqProducts(true);
 }
 
