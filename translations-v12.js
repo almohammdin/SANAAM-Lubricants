@@ -19,4 +19,13 @@
   i18n.so.packaging.body='250mL, 1L, 4L, 5L, 20L iyo 200L waa xulashooyin baakad oo lagu waafajin karo alaabta iyo baahida suuqa.';
   i18n.so.families.body='Passenger car motor oils, heavy-duty diesel, brake fluids, gear oils, ATF, hydraulic oils iyo grease.';
   i18n.so.distributors.points[2]='250mL to 200L Packaging';
+
+  function syncHeroBrand(){
+    const title=document.querySelector('.hero h1');
+    if(!title)return;
+    if(document.documentElement.lang==='ar')title.innerHTML='سنام <span>(SANAAM LUBRICANTS)</span>';
+    else title.innerHTML='SANAAM <span>LUBRICANTS</span>';
+  }
+  syncHeroBrand();
+  new MutationObserver(syncHeroBrand).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
 })();
