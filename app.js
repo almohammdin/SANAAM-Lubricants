@@ -2,7 +2,7 @@
 'use strict';
 const ASSET_LOADER_VERSION='20260819-12';
 (()=>{const s=document.createElement('script');s.src=`assets-loader.js?v=${ASSET_LOADER_VERSION}`;s.async=true;document.head.appendChild(s)})();
-const BUILD='20260820-5';
+const BUILD='20260820-6';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PRODUCTS=window.SANAAM_PRODUCTS||[];
@@ -15,11 +15,11 @@ const t=(path)=>path.split('.').reduce((o,k)=>o?.[k],I18N[state.lang])??path;
 const esc=(v)=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));
 const asset=(path)=>`${path}${path.includes('?')?'&':'?'}v=${BUILD}`;
 const familyTitle=(id)=>{const f=FAMILIES.find(x=>x.id===id);return f?t(f.titleKey):id};
-const APPLICATION_IMAGES={
-  'AUTOMOTIVE':'assets/applications/automotive.webp',
-  'HEAVY-DUTY & OFF-HIGHWAY':'assets/applications/heavy-duty-v2.webp',
-  'INDUSTRIAL':'assets/applications/industrial.webp'
-};
+const APPLICATION_IMAGES=[
+  'assets/applications/automotive.webp',
+  'assets/applications/heavy-duty-v2.webp',
+  'assets/applications/industrial.webp'
+];
 const FOOTER_SOURCE_COPY={
   ar:'تعتمد تركيبات SANAAM على زيوت أساس عالية الجودة من أرامكو السعودية.',
   en:'SANAAM formulations use high-quality Saudi base oils from Saudi Aramco.',
@@ -52,27 +52,34 @@ function renderApplications(){
   const cards=t('applications.cards');
   const host=$('#applicationsGrid');
   if(!host||!Array.isArray(cards))return;
-  host.innerHTML=cards.map(c=>{
-    const image=APPLICATION_IMAGES[c.code];
-    return `<article class="application-card">${image?`<div class="application-card-media"><img src="${asset(image)}" alt="${esc(c.title)}" width="900" height="675" loading="lazy"></div>`:''}<div class="application-card-body"><span>${esc(c.code)}</span><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></article>`;
+  host.innerHTML=cards.map((c,index)=>{
+    const image=APPLICATION_IMAGES[index];
+    return `<article class="application-card"><div class="application-card-media"><img src="${asset(image)}" alt="${esc(c.title)}" width="900" height="675" loading="lazy" onerror="this.closest('.application-card-media').classList.add('image-error')"></div><div class="application-card-body"><span>${esc(c.code)}</span><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></article>`;
   }).join('');
 }
 function renderProcesses(){const p=t('manufacturing.process');const host=$('#processList');if(host&&Array.isArray(p))host.innerHTML=p.map(x=>`<span>${esc(x)}</span>`).join('')}
 function renderDistributorPoints(){const p=t('distributors.points');const host=$('#distributorPoints');if(host&&Array.isArray(p))host.innerHTML=p.map(x=>`<div>${esc(x)}</div>`).join('')}
 function renderFooterSource(){
   const footerGrid=$('.site-footer .footer-grid');
-  const footerLinks=$('.site-footer .footer-links');
-  if(!footerGrid||!footerLinks)return;
-  let host=$('#sanaamFooterSource');
-  if(!host){
-    host=document.createElement('div');
-    host.id='sanaamFooterSource';
-    host.className='footer-origin';
-    host.innerHTML=`<div class="footer-origin-logos"><img class="footer-origin-mark is-saudi-made" src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made" loading="lazy"><img class="footer-origin-mark is-aramco" src="${asset('assets/partners/aramco.webp')}" alt="Saudi Aramco" loading="lazy"></div><p class="footer-origin-note" id="footerSourceNote"></p>`;
-    footerGrid.insertBefore(host,footerLinks);
-  }
-  const note=$('#footerSourceNote');
-  if(note)note.textContent=FOOTER_SOURCE_COPY[state.lang]||FOOTER_SOURCE_COPY.en;
+  if(!footerGrid)return;
+  footerGrid.innerHTML=`
+    <div class="footer-brand-compact">
+      <img class="footer-sanaam-logo" src="${asset('assets/brand/sanaam-logo-original.webp')}" alt="SANAAM Lubricants">
+      <p>${esc(t('footer'))}</p>
+    </div>
+    <div class="footer-source-compact">
+      <div class="footer-source-logos">
+        <span class="footer-partner-mark is-saudi-made"><img src="${asset('assets/partners/saudi-made.webp')}" alt="Saudi Made"></span>
+        <span class="footer-partner-mark is-aramco"><img src="${asset('assets/partners/aramco.webp')}" alt="Saudi Aramco"></span>
+      </div>
+      <p class="footer-source-note">${esc(FOOTER_SOURCE_COPY[state.lang]||FOOTER_SOURCE_COPY.en)}</p>
+    </div>
+    <div class="footer-links">
+      <a href="#products">${esc(t('nav.products'))}</a>
+      <a href="#applications">${esc(t('nav.applications'))}</a>
+      <a href="#packaging">${esc(t('nav.packaging'))}</a>
+      <a href="#rfq">${esc(t('nav.rfq'))}</a>
+    </div>`;
 }
 
 function populateRfqProducts(keep=true){
