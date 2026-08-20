@@ -6,7 +6,7 @@ window.SANAAM_CONFIG = {
 };
 
 (()=>{
-  const version='20260820-1';
+  const version='20260820-2';
   if(!document.querySelector('link[data-sanaam-sales-assistant]')){
     const link=document.createElement('link');
     link.rel='stylesheet';
