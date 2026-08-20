@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
           rm -rf dist
           mkdir -p dist
-          cp index.html styles.css overrides-v12.css app.js assets-loader.js config.js products.js translations.js translations-v12.js site.webmanifest robots.txt sitemap.xml .nojekyll dist/
+          cp index.html styles.css overrides-v12.css app.js assets-loader.js config.js products.js translations.js translations-v12.js site.webmanifest robots.txt sitemap.xml .nojekyll sanaam-sales-assistant.css sanaam-sales-assistant.js sanaam-sales-voice-appcheck.js sanaam-sales-voice-playback.worklet.js sanaam-sales-voice-tools.js sanaam-sales-voice.js dist/
           cp -R assets dist/assets
           test -s dist/assets/brand/sanaam-logo.jpg
           test -s dist/assets/brand/favicon.png
@@ -57,6 +57,12 @@ jobs:
           test -s dist/assets/industry/base-oil.jpg
           test -s dist/assets/industry/manufacturing.webp
           test -s dist/assets/og/sanaam-og-v12.jpg
+          test -s dist/sanaam-sales-assistant.css
+          test -s dist/sanaam-sales-assistant.js
+          test -s dist/sanaam-sales-voice-appcheck.js
+          test -s dist/sanaam-sales-voice-playback.worklet.js
+          test -s dist/sanaam-sales-voice-tools.js
+          test -s dist/sanaam-sales-voice.js
           printf 'SANAAM build: %s\n' "$GITHUB_SHA" > dist/build.txt
 
       - name: Setup Pages
